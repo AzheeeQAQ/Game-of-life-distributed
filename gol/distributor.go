@@ -2,6 +2,9 @@ package gol
 
 import (
 	"fmt"
+	"log"
+	"net"
+	"net/rpc"
 	"os"
 	"strconv"
 	"sync"
@@ -33,6 +36,15 @@ func distributor(p Params, c distributorChannels) {
 	c.ioFilename <- filename
 	c.ioCommand <- ioInput
 
+	//
+	//stdin := make(chan bool)
+	//go
+
+	TestTry := make(chan bool)
+	go handleServer(c, TestTry)
+
+	ln, _ := rpc.Dial("rpc", "127.0.0.1:8030")
+	defer ln.Close()
 	//create a 2D world
 	world := make([][]byte, p.ImageWidth)
 	for i := range world {
@@ -398,4 +410,29 @@ func calculateAliveCells(world [][]byte) []util.Cell {
 		}
 	}
 	return aliveCells
+}
+
+type LocalController struct {
+	c distributorChannels
+}
+
+func handleServer(c distributorChannels, done chan bool) {
+	//Set the server
+	//err := rpc.Register
+	err := rpc.Register(&LocalController{c: c})
+	if err != nil {
+		log.Fatal("LocalController register: ", err)
+	}
+	ln, err := net.Listen("tcp", "8060")
+	if err != nil {
+		log.Fatal("LocalController problem: ", err)
+	}
+	defer func(ln net.Listener) {
+		err := ln.Close()
+		if err != nil {
+			log.Fatal("LocalController listener closing: ", err)
+			return
+		}
+	}(ln)
+	rpc.Accept(ln)
 }
