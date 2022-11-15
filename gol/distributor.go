@@ -50,6 +50,7 @@ func distributor(p Params, c distributorChannels) {
 	if err != nil {
 		log.Fatal("dialing: ", err)
 	}
+	defer client.Close()
 	
 	//
 	//stdin := make(chan bool)
