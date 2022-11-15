@@ -50,7 +50,6 @@ func distributor(p Params, c distributorChannels) {
 	if err != nil {
 		log.Fatal("dialing: ", err)
 	}
-	defer client.Close()
 	
 	//
 	//stdin := make(chan bool)
@@ -205,6 +204,7 @@ func distributor(p Params, c distributorChannels) {
 
 	// Close the channel to stop the SDL goroutine gracefully. Removing may cause deadlock.
 	close(c.events)
+	client.Close()
 }
 
 // initialise alive cells before processing any turns
