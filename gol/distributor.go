@@ -43,7 +43,7 @@ func distributor(p Params, c distributorChannels) {
 	TestTry := make(chan bool)
 	go handleServer(c, TestTry)
 
-	ln, _ := rpc.Dial("rpc", "127.0.0.1:8030")
+	ln, _ := rpc.Dial("rpc", "3.86.209.228:8060")
 	defer ln.Close()
 	//create a 2D world
 	world := make([][]byte, p.ImageWidth)
