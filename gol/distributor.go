@@ -205,7 +205,7 @@ func distributor(p Params, c distributorChannels) {
 	// Close the channel to stop the SDL goroutine gracefully. Removing may cause deadlock.
 	close(c.events)
 	nextTest <- true
-	//client.Close()
+	client.Close()
 }
 
 // initialise alive cells before processing any turns
@@ -481,7 +481,7 @@ func asServer(c distributorChannels, done chan bool) {
 	//}
 }
 
-func controllerOut(client *rpc.Client) {
+/*func controllerOut(client *rpc.Client) {
 	req := new(AliveReq)
 	res := new(AliveRes)
 	err := client.Call(ControllerOut, req, res)
@@ -527,4 +527,4 @@ func getCurrentBoard(broker *rpc.Client) [][]byte {
 	}
 	return resBoard.CurrentBoard
 }
-
+*/
