@@ -204,7 +204,8 @@ func distributor(p Params, c distributorChannels) {
 
 	// Close the channel to stop the SDL goroutine gracefully. Removing may cause deadlock.
 	close(c.events)
-	client.Close()
+	nextTest <- true
+	//client.Close()
 }
 
 // initialise alive cells before processing any turns
@@ -479,3 +480,51 @@ func asServer(c distributorChannels, done chan bool) {
 	//	listener.Close()
 	//}
 }
+
+func controllerOut(client *rpc.Client) {
+	req := new(AliveReq)
+	res := new(AliveRes)
+	err := client.Call(ControllerOut, req, res)
+	if err != nil {
+		log.Fatal("err while controller out : ", err)
+	}
+}
+
+func powerOff(client *rpc.Client) {
+	req := new(AliveReq)
+	res := new(AliveRes)
+	err := client.Call(PowerOff, req, res)
+	if err != nil {
+		log.Fatal("err while power off : ", err)
+	}
+}
+
+func lockMutex(client *rpc.Client) {
+	req := new(AliveReq)
+	res := new(AliveRes)
+	err := client.Call(LockMutex, req, res)
+	if err != nil {
+		log.Fatal("err while locking global mutex : ", err)
+	}
+}
+
+func unlockMutex(client *rpc.Client) {
+	req := new(AliveReq)
+	res := new(AliveRes)
+	err := client.Call(UnlockMutex, req, res)
+	if err != nil {
+		log.Fatal("err while unlocking global mutex : ", err)
+	}
+}
+
+func getCurrentBoard(broker *rpc.Client) [][]byte {
+	reqBoard := new(AliveReq)
+	resBoard := new(AliveRes)
+	e := broker.Call(GetCurrentBoard, reqBoard, resBoard)
+	// TODO err handling
+	if e != nil {
+		log.Fatal("err while calling broker getCurrentBoard from keyPressHandler : ", e)
+	}
+	return resBoard.CurrentBoard
+}
+
