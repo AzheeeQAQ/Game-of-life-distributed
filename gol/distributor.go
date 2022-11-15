@@ -22,6 +22,10 @@ type distributorChannels struct {
 	keyPresses <-chan rune
 }
 
+type LocalController struct {
+	c distributorChannels
+}
+
 // distributor divides the work between workers and interacts with other goroutines.
 func distributor(p Params, c distributorChannels) {
 	// TODO: Create a 2D slice to store the world.
@@ -36,15 +40,28 @@ func distributor(p Params, c distributorChannels) {
 	c.ioFilename <- filename
 	c.ioCommand <- ioInput
 
+	
+	// set up a server at port 8060
+	nextTest := make(chan bool)
+	go asServer(c, nextTest)
+
+	// client set up at port 8030
+	client, err := rpc.Dial("tcp", "3.86.209.228:8030")
+	if err != nil {
+		log.Fatal("dialing: ", err)
+	}
+	
 	//
 	//stdin := make(chan bool)
 	//go
 
-	TestTry := make(chan bool)
+	/*TestTry := make(chan bool)
 	go handleServer(c, TestTry)
 
 	ln, _ := rpc.Dial("rpc", "3.86.209.228:8060")
-	defer ln.Close()
+	defer ln.Close()*/
+	
+	
 	//create a 2D world
 	world := make([][]byte, p.ImageWidth)
 	for i := range world {
@@ -412,7 +429,7 @@ func calculateAliveCells(world [][]byte) []util.Cell {
 	return aliveCells
 }
 
-type LocalController struct {
+/*type LocalController struct {
 	c distributorChannels
 }
 
@@ -435,4 +452,29 @@ func handleServer(c distributorChannels, done chan bool) {
 		}
 	}(ln)
 	rpc.Accept(ln)
+}*/
+
+func asServer(c distributorChannels, done chan bool) {
+	// server set up
+	err := rpc.Register(&LocalController{c: c})
+	if err != nil {
+		log.Fatal("LocalController register : ", err)
+		return
+	}
+	listener, err := net.Listen("tcp", ":8060")
+	if err != nil {
+		log.Fatal("LocalController listening problem: ", err)
+	}
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			log.Fatal("LocalController listener closing: ", err)
+			return
+		}
+	}(listener)
+	rpc.Accept(listener)
+
+	//if <- done {
+	//	listener.Close()
+	//}
 }
